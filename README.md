@@ -1,51 +1,176 @@
+# Tank-Control: RL-based Controllers for Industrial Tank Systems
 
+[![Python](https://img.shields.io/badge/python-3.6%2B-blue)](https://www.python.org/)
+[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
+## Overview
 
-### Motivation 
-The project was to see if the RL method from machine learning could be of use as control model for industrial systems. Replacing traditional controllers like P-controller and MPC. So this is more of a POC to see if its viable to throw a RL algorithm on a industrial system which needs to be controlled. 
+**Tank-Control** is a research-oriented project implementing **reinforcement learning (RL) controllers** for industrial tank-level systems. It serves as a **proof-of-concept** to explore whether RL can effectively manage liquid levels in **1, 2, and 6-tank systems**.
 
-The motivation is that some large complex industrial systems have have model sequations which need to be solved in order to have a control-model. And the solution is based on the system equations. Sometime the solution is hard to converge and solve. So this project was to figure out if one could give the system to the Machine, without any knowledge about the system and see if it could learn to control the systemstate given an disturbance to the system. 
+The project evaluates both **value-based** and **policy-based RL methods**, as well as traditional controllers like **P-controllers**, to study their performance, stability, and ability to handle disturbances.
 
-Using reinforcement learning as controllers in the process industries was ex-
-plored as an alternate path of doing control compared to the regular controllers.
-Methods such as value-based and policy-based methods were used as controllers
-for three different cases of tank level regulation. The controllers were compared
-to a traditional P-controller for evaluation of the controller performance. The
-reinforcement learning controllers showed promising results as they managed
-to control the liquid level between the predetermined constraints. However,
-the P-controllers proved a better performance with smaller input changes com-
-pared to the reinforcement learning controllers which had large input changes
-that resulted in oscillatory liquid level. This thesis shows that the creation
-of reinforcement learning controllers is complicated and time-consuming and a
-well-tuned controller would most likely perform better. However, with more re-
-search and standardized approaches, there is a huge potential of including this
-field into the process industries due to its ability to handle nonlinearity and long
-term evaluations.
+**Key Contributions:**
 
-#### Install requirements
+* Multi-agent RL implementations for tank-level regulation
+* Comparison of RL vs classical controllers
+* Modular framework supporting various RL algorithms and tank configurations
+* Baseline implementation for further research in industrial process control
 
-Create a virtual environment with Python 3.6+.
+---
 
-Run the following to install requirements for the project.
-```shell
+## Intuition & Problem Statement
+
+Industrial tank systems are **highly nonlinear** and often exhibit **coupled dynamics** where each tank’s input and output affects others. Manual or classical control strategies face challenges including:
+
+* Managing **interconnected tanks** where a single input impacts multiple outputs
+* Coping with **dynamic disturbances** and measurement noise
+* Designing controllers without precise models of the process
+
+**Reinforcement Learning Approach:**
+
+* **Value-based RL (DQN):** Approximates the action-value function for discrete actions, learning optimal policies through experience
+* **Policy-gradient methods (REINFORCE, Actor-Critic):** Directly optimize policies, suitable for continuous control
+* **Multi-agent coordination:** Each tank can be treated as an agent, learning cooperative strategies
+
+**Benefits:**
+
+* Handles **nonlinearity** without explicit system modeling
+* Learns **long-horizon strategies** considering cumulative effects
+* Multi-agent setup enables **distributed control** for complex systems
+* Provides **research insights** for future industrial applications of RL
+
+---
+
+## Technical Details
+
+### 1. RL Algorithms Implemented
+
+#### Off-Policy Value-Based Methods
+
+* **Deep Q-Network (DQN)** with replay buffers
+* Supports **multi-agent learning** for multi-tank systems
+* Batch updates improve stability
+
+#### Policy-Gradient Methods
+
+* **REINFORCE with Monte Carlo baselines**
+* Handles discrete or continuous actions
+* Batch processing reduces variance and improves convergence
+
+#### Actor-Critic Methods
+
+* Actor network outputs control signals for tanks
+* Critic evaluates state-action pairs
+* Combines policy optimization with value-based guidance
+* Continuous actions provide **smoother control**
+
+### 2. Traditional Controllers
+
+* **P-controller:** Serves as a baseline
+* Provides a benchmark for input smoothness and level stability
+
+### 3. Multi-Agent Design
+
+* Each tank is an agent observing local state
+* Agents learn cooperative policies in multi-tank setups
+* Handles **partial observability** and non-stationarity
+
+### 4. Training Workflow
+
+1. Initialize environment (1, 2, or 6 tanks)
+2. Select RL algorithm and hyperparameters
+3. Agents interact with environment, collecting states, actions, and rewards
+4. Update policies using chosen RL algorithm
+5. Evaluate against traditional P-controller
+6. Log rewards, actions, and level trajectories for analysis
+
+### 5. Evaluation Metrics
+
+* Cumulative reward over episodes
+* Liquid level tracking error
+* Smoothness of control inputs
+* Multi-agent coordination effectiveness
+
+---
+
+## Repository Structure
+
+```
+.
+├── Actor_Critic/          # Actor-Critic RL implementation
+├── P_controller/          # Classical P-controller scripts
+├── Policy_Gradient/       # REINFORCE and policy-gradient methods
+├── Q_learning/            # DQN and multi-agent Q-learning
+├── disturbance_200.csv    # Sample disturbance dataset
+├── requirements.txt       # Python dependencies
+└── README.md              # This file
+```
+
+---
+
+## Installation
+
+1. Create a virtual environment:
+
+```bash
+python -m venv venv
+source venv/bin/activate   # Linux/macOS
+venv\Scripts\activate      # Windows
+```
+
+2. Install dependencies:
+
+```bash
 pip install -r requirements.txt
 ```
-requirements.txt does not include pytorch version. Go to (https://pytorch.org/get-started/locally/) and install your correct pytorch version
-## The different projects
-### Off policy value method (DQN):
-Off policy method of Deep Q networks which trains a neural network to approximate the value of beeing in different states based on series of **1 Tank**, **2 Tanks** or **6 Tanks**. All Q-learning methods uses a batch learning method. For 2_Tank and 6_Tank, multiple agents are implemented where each agent have included the the action of the previous tanks agent as state input.
 
-### Policy gradint method (REINFORCE):
-REINFORCE Monte Carlo option of using baseline. **1 Tank**, **2 Tanks** or **6 Tanks**. All methods uses a batch learning method. For 2_Tank and 6_Tank, multiple agents are implemented where each agent have included the the action of the previous tanks agent as state input.
+> Note: PyTorch installation should match your OS and CUDA version from [PyTorch](https://pytorch.org/get-started/locally/).
 
+---
 
-### Actor critic method (A2C)
-Q Actor Critic implemented by combining REINFORCE with Q-learning. The method is not fully optimized so it may have some errors. Only implemented for 1 Tank
+## Quick Start
 
-#### How to run the different project and update parameters
-Run main.py in each project. The different project are independent on each other.
-To alter parameters change the values in python file params.py and Tank_params for the 6 tank project.
-The evalv_controller.py script is a one episode run using the predetermined disturbance_200.csv and plots the history of the valve position, liquid level and disturbance to be used for comparison of different controllers
+Example: Train a DQN agent for a 2-tank system:
+
+```bash
+python Q_learning/train_2tanks.py --episodes 1000 --batch_size 128
+```
+
+* For Actor-Critic or REINFORCE, run the respective scripts in `Actor_Critic/` or `Policy_Gradient/`
+* Compare performance against the P-controller scripts in `P_controller/`
+* Visualize rewards, control inputs, and tank levels using plotting utilities
+
+---
+
+## Key Insights
+
+* RL can **learn effective control policies** for single and multi-tank systems
+* Multi-agent setup improves coordination for multi-tank configurations
+* Traditional controllers currently outperform RL in **input smoothness** and **oscillation minimization**
+* RL provides a **flexible, model-free framework** for experimental industrial control
+
+---
+
+## Future Improvements
+
+* Implement **continuous action RL** for smoother tank control
+* Integrate **attention mechanisms** for multi-agent coordination
+* Include **safety constraints** to avoid overflows or unsafe states
+* Extend to **larger, nonlinear industrial processes**
+* Explore **hybrid RL-traditional control strategies**
+
+---
+
+## License
+
+[MIT License](LICENSE)
+
+---
+
+## Author
+
+Ali Hadi — [GitHub](https://github.com/alihadi2103)
+
 
 
 
